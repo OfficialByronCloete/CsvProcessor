@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TransactionProcessorAPI.WebAPI.Infrastructure;
 using TransactionProcessor.Core.Contracts;
 using TransactionProcessor.Integrations.DataAccess.Contexts;
+using TransactionProcessor.Integrations.DataAccess.Extensions;
 using TransactionProcessor.Integrations.DataAccess.Repositories;
 using TransactionProcessor.Services.Options;
 using TransactionProcessor.Services.Services;
@@ -29,6 +30,8 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 
 var app = builder.Build();
+
+app.Services.ApplyCsvDataProcessorMigrations();
 
 app.UseExceptionHandler();
 
