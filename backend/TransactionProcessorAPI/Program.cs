@@ -8,6 +8,7 @@ using TransactionProcessor.Services.Options;
 using TransactionProcessor.Services.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+const string FrontendCorsPolicy = "FrontendCorsPolicy";
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -18,6 +19,15 @@ builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.Configure<CsvOptions>(builder.Configuration.GetSection(CsvOptions.SectionName));
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(FrontendCorsPolicy, policy =>
+    {
+        policy.WithOrigins("http://localhost:9000")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 // DbContext (SQLite)
 builder.Services.AddDbContext<TransactionProcessorContext>(options =>
@@ -42,7 +52,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
+
+app.UseCors(FrontendCorsPolicy);
 
 app.UseAuthorization();
 
