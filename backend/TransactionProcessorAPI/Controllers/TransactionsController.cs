@@ -18,7 +18,7 @@ public sealed class TransactionsController(
 
     [HttpPost("imports")]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> UploadCsv([FromForm] IFormFile file, CancellationToken cancellationToken)
+    public async Task<IActionResult> UploadCsv(IFormFile file, CancellationToken cancellationToken)
     {
         if (file is null || file.Length == 0)
             return BadRequest("No file provided.");
