@@ -53,7 +53,7 @@ public class TransactionService(
             throw new InvalidDataException("CSV is empty. Expected a header row.");
 
         csv.ReadHeader();
-        GuardHeaderFormat(csv.HeaderRecord ?? []);
+        GuardHeaderFormat(csv.HeaderRecord ?? [], delimiter);
 
         var lineNo = 1;
 
@@ -110,10 +110,10 @@ public class TransactionService(
         if (cols.Length != 4)
             throw new InvalidDataException($"Invalid CSV data at line {lineNo}: expected 4 columns but found {cols.Length}.");
 
-        var transactionTimeValue = Get(cols, 0);
-        var transactionAmountValue = Get(cols, 1);
-        var descriptionValue = Get(cols, 2);
-        var transactionIdValue = Get(cols, 3);
+        var transactionTimeValue = GetColumnValue(cols, 0);
+        var transactionAmountValue = GetColumnValue(cols, 1);
+        var descriptionValue = GetColumnValue(cols, 2);
+        var transactionIdValue = GetColumnValue(cols, 3);
 
         if (string.IsNullOrWhiteSpace(descriptionValue))
             throw new InvalidDataException($"Invalid CSV data at line {lineNo}: 'Description' is required.");
@@ -142,12 +142,21 @@ public class TransactionService(
         };
     }
 
-    private static void GuardHeaderFormat(string[] headers)
+    private static void GuardHeaderFormat(string[] headers, string? configuredDelimiter)
     {
         if (headers.Length != ExpectedHeader.Length)
+        {
+            if (headers.Length == 1 &&
+                configuredDelimiter is not null &&
+                TryDetectDelimiter(headers[0], configuredDelimiter, out var detectedDelimiter))
+                throw new InvalidDataException(
+                    $"CSV delimiter mismatch. The API is configured for delimiter '{DisplayDelimiter(configuredDelimiter)}', " +
+                    $"but the uploaded file appears to use '{DisplayDelimiter(detectedDelimiter)}'.");
+
             throw new InvalidDataException(
                 $"Invalid CSV header column count. Expected {ExpectedHeader.Length} columns: '{string.Join(",", ExpectedHeader)}'. " +
                 $"Got {headers.Length}: '{string.Join(",", headers)}'.");
+        }
 
         for (var i = 0; i < ExpectedHeader.Length; i++)
         {
@@ -161,13 +170,35 @@ public class TransactionService(
         }
     }
 
-    private static string Get(string[] cols, int index)
+    private static string GetColumnValue(string[] cols, int index)
     {
         if ((uint)index >= (uint)cols.Length)
             return string.Empty;
 
         return cols[index].Trim();
     }
+
+    // This method is used to detect if the uploaded CSV file uses a different delimiter than the one configured in the API.
+    private static bool TryDetectDelimiter(string header, string configuredDelimiter, out string detectedDelimiter)
+    {
+        foreach (var candidate in new[] { ",", ";", "|", "\t" })
+        {
+            if (candidate == configuredDelimiter)
+                continue;
+
+            if (header.Contains(candidate, StringComparison.Ordinal))
+            {
+                detectedDelimiter = candidate;
+                return true;
+            }
+        }
+
+        detectedDelimiter = string.Empty;
+        return false;
+    }
+
+    private static string DisplayDelimiter(string delimiter)
+        => delimiter == "\t" ? "\\t" : delimiter;
 
     private static string? GetDelimiter(string? configuredDelimiter)
     {
