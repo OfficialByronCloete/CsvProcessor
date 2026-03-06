@@ -11,4 +11,11 @@
   <Folder Name="/Infrastructure/DataAccess/">
     <Project Path="../TransactionProcessor.Integrations.DataAccess/TransactionProcessor.Integrations.DataAccess.csproj" />
   </Folder>
+  <Folder Name="/Tests/" />
+  <Folder Name="/Tests/Artifacts/">
+    <Project Path="../TransactionProcessorAPI.WebAPI.Tests/TransactionProcessorAPI.WebAPI.Tests.csproj" Id="bbe65df1-6b04-4f14-bfb9-1b0feb5ddcb2" />
+  </Folder>
+  <Folder Name="/Tests/Domain/">
+    <Project Path="../TransactionProcessor.Services.Tests/TransactionProcessor.Services.Tests.csproj" Id="fb370705-f809-4006-bbc0-a7b8195d71fc" />
+  </Folder>
 </Solution>

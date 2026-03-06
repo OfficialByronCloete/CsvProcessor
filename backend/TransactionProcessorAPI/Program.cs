@@ -4,8 +4,8 @@ using TransactionProcessor.Core.Contracts;
 using TransactionProcessor.Integrations.DataAccess.Contexts;
 using TransactionProcessor.Integrations.DataAccess.Extensions;
 using TransactionProcessor.Integrations.DataAccess.Repositories;
-using TransactionProcessor.Services.Options;
 using TransactionProcessor.Services.Services;
+using TransactionProcessor.Common.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 const string FrontendCorsPolicy = "FrontendCorsPolicy";

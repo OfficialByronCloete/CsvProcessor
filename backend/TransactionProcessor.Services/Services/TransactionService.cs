@@ -3,8 +3,8 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.Extensions.Options;
 using TransactionProcessor.Common.Models;
+using TransactionProcessor.Common.Options;
 using TransactionProcessor.Core.Contracts;
-using TransactionProcessor.Services.Options;
 
 namespace TransactionProcessor.Services.Services;
 

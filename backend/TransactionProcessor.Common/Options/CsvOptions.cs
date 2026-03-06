@@ -1,4 +1,4 @@
-namespace TransactionProcessor.Services.Options;
+namespace TransactionProcessor.Common.Options;
 
 public sealed class CsvOptions
 {
