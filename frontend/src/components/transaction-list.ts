@@ -58,7 +58,19 @@ export class TransactionList {
   }
 
   public formatDate(value: string): string {
-    return new Date(value).toLocaleString();
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    const day = this.padDatePart(date.getDate());
+    const month = this.padDatePart(date.getMonth() + 1);
+    const year = date.getFullYear();
+    const hours = this.padDatePart(date.getHours());
+    const minutes = this.padDatePart(date.getMinutes());
+    const seconds = this.padDatePart(date.getSeconds());
+
+    return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
   }
 
   public async uploadSelectedFile(): Promise<void> {
@@ -158,7 +170,8 @@ export class TransactionList {
       return;
     }
 
-    if (!this.isValidTransactionTime(this.editModel.transactionTime)) {
+    const normalizedTransactionTime = this.normalizeTransactionTime(this.editModel.transactionTime);
+    if (normalizedTransactionTime === null) {
       this.updateErrorMessage = TransactionList.invalidTransactionTimeMessage;
       return;
     }
@@ -178,6 +191,7 @@ export class TransactionList {
     try {
       await this.transactionsService.updateTransaction({
         ...this.editModel,
+        transactionTime: normalizedTransactionTime,
         transactionAmount: amount,
       });
       this.editModel = null;
@@ -209,7 +223,33 @@ export class TransactionList {
     }
   }
 
-  private isValidTransactionTime(value: string): boolean {
-    return !Number.isNaN(Date.parse(value));
+  private normalizeTransactionTime(value: string): string | null {
+    const trimmedValue = value.trim();
+    const slashDateOnly = /^(\d{4})\/(\d{2})\/(\d{2})$/;
+    const slashDateMatch = trimmedValue.match(slashDateOnly);
+
+    if (slashDateMatch !== null) {
+      const [, yearPart, monthPart, dayPart] = slashDateMatch;
+      const year = Number(yearPart);
+      const month = Number(monthPart);
+      const day = Number(dayPart);
+      const date = new Date(Date.UTC(year, month - 1, day));
+
+      if (
+        date.getUTCFullYear() !== year ||
+        date.getUTCMonth() !== month - 1 ||
+        date.getUTCDate() !== day
+      ) {
+        return null;
+      }
+
+      return `${yearPart}-${monthPart}-${dayPart}`;
+    }
+
+    return Number.isNaN(Date.parse(trimmedValue)) ? null : trimmedValue;
+  }
+
+  private padDatePart(value: number): string {
+    return value.toString().padStart(2, '0');
   }
 }
