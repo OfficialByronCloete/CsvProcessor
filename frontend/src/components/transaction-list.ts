@@ -4,6 +4,7 @@ import type { CsvImportResult } from '../models/csv-import-result';
 
 export class TransactionList {
   private readonly transactionsService = new TransactionsService();
+  private static readonly invalidTransactionTimeMessage = "'TransactionTime' must be a valid date and time value.";
 
   public transactions: Transaction[] = [];
   public selectedFiles: FileList | null = null;
@@ -157,6 +158,11 @@ export class TransactionList {
       return;
     }
 
+    if (!this.isValidTransactionTime(this.editModel.transactionTime)) {
+      this.updateErrorMessage = TransactionList.invalidTransactionTimeMessage;
+      return;
+    }
+
     if (!this.editModel.description.trim()) {
       this.updateErrorMessage = 'Description is required.';
       return;
@@ -201,5 +207,9 @@ export class TransactionList {
     } finally {
       this.isLoading = false;
     }
+  }
+
+  private isValidTransactionTime(value: string): boolean {
+    return !Number.isNaN(Date.parse(value));
   }
 }
