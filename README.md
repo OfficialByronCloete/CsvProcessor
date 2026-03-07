@@ -15,6 +15,12 @@ Start the full stack:
 docker compose up --build
 ```
 
+On Windows, you can also run the entire project with:
+
+```bat
+run-all.bat
+```
+
 Services:
 - Frontend: `http://localhost:9000`
 - Backend API: `http://localhost:5062`
@@ -62,11 +68,6 @@ Field rules:
 
 Sample files included in `frontend/`:
 - `sample-transactions-1000.csv` (comma, 1000 records)
-- `sample-transactions-comma.csv`
-- `sample-transactions-semicolon.csv`
-- `sample-default-time.csv`
-- `sample-no-time.csv`
-- `sample-transactions-with-time.csv`
 
 ### Generate your own sample CSV
 
