@@ -61,12 +61,12 @@ public class TransactionService(
         {
             cancellationToken.ThrowIfCancellationRequested();
             lineNo++;
-            var cols = csv.Context.Parser?.Record ?? [];
+            var columns = csv.Context.Parser?.Record ?? [];
 
-            if (cols.Length == 0 || cols.All(string.IsNullOrWhiteSpace))
+            if (columns.Length == 0 || columns.All(string.IsNullOrWhiteSpace))
                 throw new InvalidDataException($"Invalid CSV data at line {lineNo}: line is empty.");
 
-            var transaction = GuardAndMapRow(cols, lineNo, transactionTimeFormat);
+            var transaction = GuardAndMapRow(columns, lineNo, transactionTimeFormat);
             transactions.Add(transaction);
         }
 
@@ -113,15 +113,15 @@ public class TransactionService(
         return transactionRepository.DeleteTransactionAsync(transactionId, cancellationToken);
     }
 
-    private static TransactionModel GuardAndMapRow(string[] cols, int lineNo, string transactionTimeFormat)
+    private static TransactionModel GuardAndMapRow(string[] columns, int lineNo, string transactionTimeFormat)
     {
-        if (cols.Length != 4)
-            throw new InvalidDataException($"Invalid CSV data at line {lineNo}: expected 4 columns but found {cols.Length}.");
+        if (columns.Length != 4)
+            throw new InvalidDataException($"Invalid CSV data at line {lineNo}: expected 4 columns but found {columns.Length}.");
 
-        var transactionTimeValue = GetColumnValue(cols, 0);
-        var transactionAmountValue = GetColumnValue(cols, 1);
-        var descriptionValue = GetColumnValue(cols, 2);
-        var transactionIdValue = GetColumnValue(cols, 3);
+        var transactionTimeValue = GetColumnValue(columns, 0);
+        var transactionAmountValue = GetColumnValue(columns, 1);
+        var descriptionValue = GetColumnValue(columns, 2);
+        var transactionIdValue = GetColumnValue(columns, 3);
 
         if (string.IsNullOrWhiteSpace(descriptionValue))
             throw new InvalidDataException($"Invalid CSV data at line {lineNo}: 'Description' is required.");
@@ -150,30 +150,30 @@ public class TransactionService(
         };
     }
 
-    private static void GuardHeaderFormat(string[] headers, string? configuredDelimiter)
+    private static void GuardHeaderFormat(string[] incomingCsvHeaders, string? configuredDelimiter)
     {
-        if (headers.Length != ExpectedHeader.Length)
+        if (incomingCsvHeaders.Length != ExpectedHeader.Length)
         {
-            if (headers.Length == 1 &&
+            if (incomingCsvHeaders.Length == 1 &&
                 configuredDelimiter is not null &&
-                TryDetectDelimiter(headers[0], configuredDelimiter, out var detectedDelimiter))
+                TryDetectDelimiter(incomingCsvHeaders[0], configuredDelimiter, out var detectedDelimiter))
                 throw new InvalidDataException(
                     $"CSV delimiter mismatch. The API is configured for delimiter '{DisplayDelimiter(configuredDelimiter)}', " +
                     $"but the uploaded file appears to use '{DisplayDelimiter(detectedDelimiter)}'.");
 
             throw new InvalidDataException(
                 $"Invalid CSV header column count. Expected {ExpectedHeader.Length} columns: '{string.Join(",", ExpectedHeader)}'. " +
-                $"Got {headers.Length}: '{string.Join(",", headers)}'.");
+                $"Got {incomingCsvHeaders.Length}: '{string.Join(",", incomingCsvHeaders)}'.");
         }
 
         for (var i = 0; i < ExpectedHeader.Length; i++)
         {
-            var actual = headers[i].Trim();
-            var expected = ExpectedHeader[i];
+            var actualCsvHeader = incomingCsvHeaders[i].Trim();
+            var expectedCsvHeader = ExpectedHeader[i];
 
-            if (!string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(actualCsvHeader, expectedCsvHeader, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidDataException(
-                    $"Invalid CSV header at position {i + 1}. Expected '{expected}', got '{actual}'. " +
+                    $"Invalid CSV header at position {i + 1}. Expected '{expectedCsvHeader}', got '{actualCsvHeader}'. " +
                     $"Expected header: '{string.Join(",", ExpectedHeader)}'.");
         }
     }
@@ -239,10 +239,5 @@ public class TransactionService(
             out transactionTime);
 
     private static bool HasExactDecimalPlaces(decimal value, int requiredDecimalPlaces)
-    {
-        var bits = decimal.GetBits(value);
-        var scale = (bits[3] >> 16) & 0xFF;
-        return scale == requiredDecimalPlaces;
-    }
-    
+        => value == Math.Round(value, requiredDecimalPlaces);
 }
